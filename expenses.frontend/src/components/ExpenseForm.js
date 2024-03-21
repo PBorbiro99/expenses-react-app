@@ -1,9 +1,9 @@
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { React, useState, useEffect } from "react";
-import { NewExpense } from "../services/expenses";
+import { EditExpense, NewExpense, DeleteExpense } from "../services/expenses";
 import { useDispatch } from "react-redux";
 
-export default () => {
+export default ({ expense, setIsEditing }) => {
   const descriptions = [
     "Groceries",
     "Credi card",
@@ -16,19 +16,39 @@ export default () => {
   const [isNewExpense, setIsNewExpense] = useState(true);
   const dispatch = useDispatch();
 
-  return <Form
+  useEffect(() => {
+    if (expense !== undefined) {
+      setIsNewExpense(false);
+      setAmount(expense.amount);
+    } else {
+      setIsNewExpense(true);
+    }
+  }, [expense]);
+
+  return (
+    <Form
       onSubmit={(event) => {
         event.preventDefault();
         if (isNewExpense) {
           //create new expense
-          NewExpense(dispatch, { description: description, amount: amount });
+          NewExpense(dispatch, {
+            description: description,
+            amount: Number(amount),
+          });
         } else {
           //edit expense
+          EditExpense(dispatch, {
+            id: expense.id,
+            description: description,
+            amount: Number(amount),
+          });
+
+          setIsEditing(false);
         }
       }}
     >
-      <Row>
-        <Col>
+      <Row className="justify-content-between">
+        <Col md="auto">
           <Form.Label>Description</Form.Label>
           <Form.Control
             as="select"
@@ -39,7 +59,7 @@ export default () => {
             ))}
           </Form.Control>
         </Col>
-        <Col>
+        <Col md="auto">
           <Form.Label>Amount</Form.Label>
           <Form.Control
             type="number"
@@ -49,23 +69,41 @@ export default () => {
           />
         </Col>
         {/* <Col> */}
-        <div style={{ marginTop: "auto" }}>
-          {isNewExpense ? (
-            <Button variant="primary" type="submit">
-              Add
-            </Button>
-          ) : (
-            <div>
-              <Button variant="danger">Delete</Button>
-              <Button variant="success" type="submit">
-                Save
+        <Col md="auto" className="mt-auto">
+          <div style={{ marginTop: "auto" }}>
+            {isNewExpense ? (
+              <Button variant="primary" type="submit">
+                Add
               </Button>
-              <Button variant="default">Cancel</Button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div>
+                <Button
+                  style={{ marginRight: "10px" }}
+                  variant="danger"
+                  onClick={() => DeleteExpense(dispatch, expense)}
+                >
+                  Delete
+                </Button>
+                <Button
+                  style={{ marginRight: "10px" }}
+                  variant="success"
+                  type="submit"
+                >
+                  Save
+                </Button>
+                <Button
+                  style={{ marginRight: "10px" }}
+                  variant="default"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
+        </Col>
         {/* </Col> */}
       </Row>
     </Form>
-  
+  );
 };
